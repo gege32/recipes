@@ -1,0 +1,103 @@
+POST http://localhost:8080/recipe/create
+Content-Type: application/json
+
+{
+  "name": "mashed potato",
+  "servings": 4,
+  "ingredients": "potatoes, water, almond milk, vegan butter",
+  "instructions": "cook potatoes in a pot, mix with other ingredients",
+  "vegan": true
+}
+
+###
+
+POST http://localhost:8080/recipe/create
+Content-Type: application/json
+
+{
+  "name": "chicken steak",
+  "servings": 2,
+  "ingredients": "chicken, oil, salt, pepper",
+  "instructions": "cook ckicken in the pan",
+  "vegan": false
+}
+
+###
+
+POST http://localhost:8080/recipe/create
+Content-Type: application/json
+
+{
+  "name": "powerpuff girls",
+  "servings": 3,
+  "ingredients": "sugar, spice, everything nice, chemical x",
+  "instructions": "mix",
+  "vegan": false
+}
+
+###
+
+POST http://localhost:8080/recipe/create
+Content-Type: application/json
+
+{
+  "name": "tea",
+  "servings": 2,
+  "ingredients": "water, teabag",
+  "instructions": "put teabag in hot water",
+  "vegan": true
+}
+
+###
+
+GET http://localhost:8080/recipe/list
+Accept: application/json
+
+###
+
+GET http://localhost:8080/recipe/1
+Accept: application/json
+
+###
+
+GET http://localhost:8080/recipe?vegan=true
+Accept: application/json
+
+###
+
+GET http://localhost:8080/recipe?vegan=false&servings=2
+Accept: application/json
+
+###
+
+GET http://localhost:8080/recipe?vegan=true&ingredient=water
+Accept: application/json
+
+###
+
+POST http://localhost:8080/recipe/update
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "mashed potatas",
+  "servings": 4,
+  "ingredients": "potatoes, water, milk, butter",
+  "instructions": "cook potatoes in a pot, mix with other ingredients",
+  "vegan": false
+}
+
+###
+
+GET http://localhost:8080/recipe/delete/2
+Accept: application/json
+
+###
+
+GET http://localhost:8080/recipe/delete/3
+Accept: application/json
+
+###
+
+GET http://localhost:8080/recipe/list
+Accept: application/json
