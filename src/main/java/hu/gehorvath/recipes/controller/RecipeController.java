@@ -2,6 +2,12 @@ package hu.gehorvath.recipes.controller;
 
 import hu.gehorvath.recipes.model.Recipe;
 import hu.gehorvath.recipes.repository.RecipeRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Tag(name = "Recipe controller")
 @RestController
 public class RecipeController {
 
@@ -25,13 +32,25 @@ public class RecipeController {
         this.recipeRepository = recipeRepository;
     }
 
-
+    @Operation(summary = "List all the recipes")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Recipe list generated",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Recipe.class))})})
     @GetMapping("/recipe/list")
     public ResponseEntity<List<Recipe>> listRecipes() {
         LOG.info("listRecipes");
         return ResponseEntity.ok(StreamSupport.stream(recipeRepository.findAll().spliterator(), false).collect(Collectors.toList()));
     }
 
+    @Operation(summary = "Get a single recipe by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found the recipe",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Recipe.class))}),
+            @ApiResponse(responseCode = "404", description = "Recipe not found",
+                    content = @Content)
+    })
     @GetMapping("/recipe/{id}")
     public ResponseEntity<Recipe> getRecipe(@PathVariable("id") Long id) {
         LOG.info("getRecipe");
@@ -41,6 +60,12 @@ public class RecipeController {
         return ResponseEntity.ok(byId.get());
     }
 
+    @Operation(summary = "Filter the recipes")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found the recipe",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Recipe.class))})
+    })
     @GetMapping("/recipe")
     public ResponseEntity<List<Recipe>> filterRecipe(@RequestParam(value = "vegan", required = false) Boolean vegan,
                                                      @RequestParam(value = "servings", required = false) Long servings,
@@ -59,13 +84,31 @@ public class RecipeController {
 
     }
 
-    @PostMapping("/recipe/update")
-    public ResponseEntity<Recipe> updateRecipe(@RequestBody @Valid Recipe recipe) {
+    @Operation(summary = "Update a recipe")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Recipe updated",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Recipe.class))}),
+            @ApiResponse(responseCode = "404", description = "Recipe not found",
+                    content = @Content)
+    })
+    @PutMapping("/recipe/{id}")
+    public ResponseEntity<Recipe> updateRecipe(@RequestBody @Valid Recipe recipe, @PathVariable Long id) {
         LOG.info("updateRecipe");
+        if (!recipeRepository.existsById(id)) return ResponseEntity.notFound().build();
+        recipe.setId(id);
         return ResponseEntity.ok(recipeRepository.save(recipe));
     }
 
-    @PostMapping("/recipe/create")
+    @Operation(summary = "Create a recipe")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Recipe created",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Recipe.class))}),
+            @ApiResponse(responseCode = "400", description = "Wrong data",
+                    content = @Content)
+    })
+    @PostMapping("/recipe")
     public ResponseEntity<Recipe> createRecipe(@RequestBody @Valid Recipe recipe) {
         LOG.info("createRecipe");
         if (recipe.getId() != null) {
@@ -74,9 +117,18 @@ public class RecipeController {
         return ResponseEntity.ok(recipeRepository.save(recipe));
     }
 
-    @GetMapping("/recipe/delete/{id}")
+    @Operation(summary = "Delete a recipe")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Recipe deleted",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Recipe.class))}),
+            @ApiResponse(responseCode = "404", description = "Not found",
+                    content = @Content)
+    })
+    @DeleteMapping("/recipe/{id}")
     public ResponseEntity deleteRecipe(@PathVariable("id") Long id) {
         LOG.info("deleteRecipe");
+        if (!recipeRepository.existsById(id)) return ResponseEntity.notFound().build();
         recipeRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }

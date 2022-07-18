@@ -25,9 +25,4 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-    @Bean
-    public WebSecurityCustomizer ignoringCustomizer() {
-        return (web) -> web.ignoring().antMatchers("/recipe**");
-    }
-
 }

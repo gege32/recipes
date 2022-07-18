@@ -1,5 +1,7 @@
 package hu.gehorvath.recipes.model;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -12,6 +14,7 @@ public class Recipe {
 
     @Id
     @GeneratedValue
+    @Hidden
     private Long id;
     @NotBlank
     private String name;
