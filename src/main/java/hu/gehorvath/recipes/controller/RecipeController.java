@@ -1,7 +1,7 @@
 package hu.gehorvath.recipes.controller;
 
 import hu.gehorvath.recipes.model.Recipe;
-import hu.gehorvath.recipes.repository.RecipeRepository;
+import hu.gehorvath.recipes.service.RecipeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,15 +10,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Tag(name = "Recipe controller")
 @RestController
@@ -26,10 +21,10 @@ public class RecipeController {
 
     private static final Logger LOG = LoggerFactory.getLogger(RecipeController.class);
 
-    private final RecipeRepository recipeRepository;
+    private final RecipeService recipeService;
 
-    public RecipeController(RecipeRepository recipeRepository) {
-        this.recipeRepository = recipeRepository;
+    public RecipeController(RecipeService recipeService) {
+        this.recipeService = recipeService;
     }
 
     @Operation(summary = "List all the recipes")
@@ -38,9 +33,9 @@ public class RecipeController {
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = Recipe.class))})})
     @GetMapping("/recipe/list")
-    public ResponseEntity<List<Recipe>> listRecipes() {
+    public List<Recipe> listRecipes() {
         LOG.info("listRecipes");
-        return ResponseEntity.ok(StreamSupport.stream(recipeRepository.findAll().spliterator(), false).collect(Collectors.toList()));
+        return recipeService.listRecipe();
     }
 
     @Operation(summary = "Get a single recipe by ID")
@@ -52,12 +47,9 @@ public class RecipeController {
                     content = @Content)
     })
     @GetMapping("/recipe/{id}")
-    public ResponseEntity<Recipe> getRecipe(@PathVariable("id") Long id) {
+    public Recipe getRecipe(@PathVariable("id") Long id) {
         LOG.info("getRecipe");
-        Optional<Recipe> byId = recipeRepository.findById(id);
-        if (byId.isEmpty()) return ResponseEntity.notFound().build();
-
-        return ResponseEntity.ok(byId.get());
+        return recipeService.getRecipe(id);
     }
 
     @Operation(summary = "Filter the recipes")
@@ -67,21 +59,13 @@ public class RecipeController {
                             schema = @Schema(implementation = Recipe.class))})
     })
     @GetMapping("/recipe")
-    public ResponseEntity<List<Recipe>> filterRecipe(@RequestParam(value = "vegan", required = false) Boolean vegan,
+    public List<Recipe> filterRecipe(@RequestParam(value = "vegan", required = false) Boolean vegan,
                                                      @RequestParam(value = "servings", required = false) Long servings,
                                                      @RequestParam(value = "ingredient", required = false) List<String> ingredients,
                                                      @RequestParam(value = "include", required = false) Boolean include,
                                                      @RequestParam(value = "instructions", required = false) String instructions) {
         LOG.info("filterRecipe");
-        Specification<Recipe> specification = Specification.where(veganIs(vegan)).and(servingSizeIs(servings)).and(instructionsContains(instructions));
-
-        if (ingredients != null) {
-            ingredients.forEach(ingredient -> {
-                specification.and(include == null ? ingredientsContains(ingredient) : include ? ingredientsContains(ingredient) : ingredientsNotContains(ingredient));
-            });
-        }
-        return ResponseEntity.ok(recipeRepository.findAll(specification));
-
+        return recipeService.filterRecipe(vegan, servings, ingredients, include, instructions);
     }
 
     @Operation(summary = "Update a recipe")
@@ -93,11 +77,9 @@ public class RecipeController {
                     content = @Content)
     })
     @PutMapping("/recipe/{id}")
-    public ResponseEntity<Recipe> updateRecipe(@RequestBody @Valid Recipe recipe, @PathVariable Long id) {
+    public Recipe updateRecipe(@RequestBody @Valid Recipe recipe, @PathVariable Long id) {
         LOG.info("updateRecipe");
-        if (!recipeRepository.existsById(id)) return ResponseEntity.notFound().build();
-        recipe.setId(id);
-        return ResponseEntity.ok(recipeRepository.save(recipe));
+        return recipeService.updateRecipe(recipe, id);
     }
 
     @Operation(summary = "Create a recipe")
@@ -105,16 +87,13 @@ public class RecipeController {
             @ApiResponse(responseCode = "200", description = "Recipe created",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = Recipe.class))}),
-            @ApiResponse(responseCode = "400", description = "Wrong data",
+            @ApiResponse(responseCode = "400", description = "Item already exists",
                     content = @Content)
     })
     @PostMapping("/recipe")
-    public ResponseEntity<Recipe> createRecipe(@RequestBody @Valid Recipe recipe) {
+    public Recipe createRecipe(@RequestBody @Valid Recipe recipe) {
         LOG.info("createRecipe");
-        if (recipe.getId() != null) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(recipeRepository.save(recipe));
+        return recipeService.createRecipe(recipe);
     }
 
     @Operation(summary = "Delete a recipe")
@@ -126,31 +105,10 @@ public class RecipeController {
                     content = @Content)
     })
     @DeleteMapping("/recipe/{id}")
-    public ResponseEntity deleteRecipe(@PathVariable("id") Long id) {
+    public String deleteRecipe(@PathVariable("id") Long id) {
         LOG.info("deleteRecipe");
-        if (!recipeRepository.existsById(id)) return ResponseEntity.notFound().build();
-        recipeRepository.deleteById(id);
-        return ResponseEntity.ok().build();
-    }
-
-    public static Specification<Recipe> veganIs(Boolean vegan) {
-        return (root, query, builder) -> vegan == null ? builder.conjunction() : builder.equal(root.get("vegan"), vegan);
-    }
-
-    public static Specification<Recipe> servingSizeIs(Long servings) {
-        return (root, query, builder) -> servings == null ? builder.conjunction() : builder.equal(root.get("servings"), servings);
-    }
-
-    public static Specification<Recipe> ingredientsContains(String ingredients) {
-        return (root, query, builder) -> ingredients == null ? builder.conjunction() : builder.like(root.get("ingredients"), ingredients);
-    }
-
-    public static Specification<Recipe> ingredientsNotContains(String ingredients) {
-        return (root, query, builder) -> ingredients == null ? builder.conjunction() : builder.notLike(root.get("ingredients"), ingredients);
-    }
-
-    public static Specification<Recipe> instructionsContains(String instrucations) {
-        return (root, query, builder) -> instrucations == null ? builder.conjunction() : builder.like(root.get("instructions"), instrucations);
+        recipeService.deleteRecipe(id);
+        return "OK";
     }
 
 }

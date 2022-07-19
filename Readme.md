@@ -26,4 +26,16 @@ Navigate to to following URL:
 
 ## Architectural choices
 
+### SpringBoot
+
+Spring boot is for me the easiest and fastest way to create REST API applications. It is easy to deploy, has embedded webserver, and requires minimal configuration.
+
+### Database
+
+For persistence, I chose HSQLDB. It is integrated in the running application, so there is no need to deploy a separate database anywhere else, which is ideal for a minimal functionality project.
+
+### SpringDocs
+
+SpringDocs provides a nice and easy to read and test documentation framework, which is available to look at runtime, and allows generation of swagger documents at build time.
+
 
