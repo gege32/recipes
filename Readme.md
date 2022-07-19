@@ -20,9 +20,11 @@ This creates a runnable JAR file in target folder. To start the application run:
 
 ## Usage
 
-Navigate to to following URL:
+[SWAGGER](docs/openapi.json)
 
-```http://localhost:8080/```
+While the application is running: [Interactive docs](http://localhost:8080/swagger-ui/index.html)
+
+```http://localhost:8080/recipe```
 
 ## Architectural choices
 
@@ -32,10 +34,11 @@ Spring boot is for me the easiest and fastest way to create REST API application
 
 ### Database
 
-For persistence, I chose HSQLDB. It is integrated in the running application, so there is no need to deploy a separate database anywhere else, which is ideal for a minimal functionality project.
+For persistence, I chose HSQLDB. It is integrated in the running application, so there is no need to deploy a separate database anywhere else, which is ideal for a project like this.
 
 ### SpringDocs
 
 SpringDocs provides a nice and easy to read and test documentation framework, which is available to look at runtime, and allows generation of swagger documents at build time.
 
+While the application is running: [Interactive docs](http://localhost:8080/swagger-ui/index.html)
 
