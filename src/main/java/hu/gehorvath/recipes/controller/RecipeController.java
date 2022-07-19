@@ -64,7 +64,7 @@ public class RecipeController {
                                                      @RequestParam(value = "ingredient", required = false) List<String> ingredients,
                                                      @RequestParam(value = "include", required = false) Boolean include,
                                                      @RequestParam(value = "instructions", required = false) String instructions) {
-        LOG.info("filterRecipe");
+        LOG.info("filterRecipe: {}, {}, {}, {}, {}", vegan, servings, ingredients, include, instructions);
         return recipeService.filterRecipe(vegan, servings, ingredients, include, instructions);
     }
 

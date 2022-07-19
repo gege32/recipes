@@ -1,6 +1,7 @@
 package hu.gehorvath.recipes.error;
 
 import hu.gehorvath.recipes.exception.InternalErrorException;
+import hu.gehorvath.recipes.exception.ItemAlreadyExistsException;
 import hu.gehorvath.recipes.exception.ItemDoesNotExistException;
 import hu.gehorvath.recipes.exception.ResponseException;
 import org.springframework.http.HttpHeaders;
@@ -26,12 +27,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(exception, error, headers, exception.getStatus(), request);
     }
 
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException exception, WebRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        APIValidationError error = new APIValidationError(exception);
-        error.setMessage(exception.getMessage());
-        return handleExceptionInternal(exception, error, headers, HttpStatus.BAD_REQUEST, request);
+    @Override
+    public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+        APIValidationError error = new APIValidationError(ex);
+        error.setMessage(ex.getMessage());
+        return handleExceptionInternal(ex, error, headers, HttpStatus.BAD_REQUEST, request);
     }
 
 
@@ -49,11 +49,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         HttpHeaders headers = new HttpHeaders();
         APIError error = new APIError(new ResponseException(exception.getMessage(), HttpStatus.NOT_FOUND));
         error.setMessage(exception.getMessage());
-        return handleExceptionInternal(exception, error, headers, HttpStatus.BAD_REQUEST, request);
+        return handleExceptionInternal(exception, error, headers, HttpStatus.NOT_FOUND, request);
     }
 
-    @ExceptionHandler(value = ItemDoesNotExistException.class)
-    public ResponseEntity<Object> handleItemAlreadyExistsException(ItemDoesNotExistException exception,
+    @ExceptionHandler(value = ItemAlreadyExistsException.class)
+    public ResponseEntity<Object> handleItemAlreadyExistsException(ItemAlreadyExistsException exception,
                                                                         WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
         APIError error = new APIError(new ResponseException(exception.getMessage(), HttpStatus.BAD_REQUEST));

@@ -5,10 +5,12 @@ import hu.gehorvath.recipes.exception.ItemDoesNotExistException;
 import hu.gehorvath.recipes.model.Recipe;
 import hu.gehorvath.recipes.repository.RecipeRepository;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.expression.common.CompositeStringExpression;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.persistence.criteria.Expression;
 import java.util.List;
 
 @Service
@@ -21,7 +23,8 @@ public class RecipeService {
     }
 
     public Recipe createRecipe(Recipe recipe) {
-        if(recipe.getId() != null && recipeRepository.existsById(recipe.getId())) throw new ItemAlreadyExistsException("Cannot create Recipe, ID already exists");
+        if (recipe.getId() != null && recipeRepository.existsById(recipe.getId()))
+            throw new ItemAlreadyExistsException("Cannot create Recipe, ID already exists");
         return recipeRepository.save(recipe);
     }
 
@@ -45,12 +48,16 @@ public class RecipeService {
     }
 
     public List<Recipe> filterRecipe(Boolean vegan, Long servings, List<String> ingredients, Boolean include, String instructions) {
-        Specification<Recipe> specification = Specification.where(veganIs(vegan)).and(servingSizeIs(servings)).and(instructionsContains(instructions));
+        Specification<Recipe> specification = Specification
+                .where(veganIs(vegan))
+                .and(servingSizeIs(servings))
+                .and(instructionsContains(instructions));
 
         if (ingredients != null) {
-            ingredients.forEach(ingredient -> {
-                specification.and(include == null ? ingredientsContains(ingredient) : include ? ingredientsContains(ingredient) : ingredientsNotContains(ingredient));
-            });
+            for (String ingr : ingredients) {
+                specification = specification.and(include == null ? ingredientsContains(ingr) : include ? ingredientsContains(ingr) : ingredientsNotContains(ingr));
+
+            }
         }
         return recipeRepository.findAll(specification);
     }
@@ -63,12 +70,12 @@ public class RecipeService {
         return (root, query, builder) -> servings == null ? builder.conjunction() : builder.equal(root.get("servings"), servings);
     }
 
-    private static Specification<Recipe> ingredientsContains(String ingredients) {
-        return (root, query, builder) -> ingredients == null ? builder.conjunction() : builder.like(root.get("ingredients"), ingredients);
+    private static Specification<Recipe> ingredientsContains(String ingredient) {
+        return (root, query, builder) -> ingredient == null ? builder.conjunction() : builder.like(root.get("ingredients"), "%" + ingredient + "%");
     }
 
-    private static Specification<Recipe> ingredientsNotContains(String ingredients) {
-        return (root, query, builder) -> ingredients == null ? builder.conjunction() : builder.notLike(root.get("ingredients"), ingredients);
+    private static Specification<Recipe> ingredientsNotContains(String ingredient) {
+        return (root, query, builder) -> ingredient == null ? builder.conjunction() : builder.notLike(root.get("ingredients"), "%" + ingredient + "%");
     }
 
     private static Specification<Recipe> instructionsContains(String instrucations) {
