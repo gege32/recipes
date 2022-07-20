@@ -18,13 +18,17 @@ This creates a runnable JAR file in target folder. To start the application run:
 
 ```java -jar recipeApp.jar```
 
-## Usage
+## Docs and tests
 
 [SWAGGER](docs/openapi.json)
 
 While the application is running: [Interactive docs](http://localhost:8080/swagger-ui/index.html)
 
 ```http://localhost:8080/recipe```
+
+To run tests (and generate swagger), run the following command
+
+```mvn verify```
 
 ## Architectural choices
 
