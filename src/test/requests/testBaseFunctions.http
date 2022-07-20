@@ -2,6 +2,7 @@ POST http://localhost:8080/recipe
 Content-Type: application/json
 
 {
+  "name": "mashed potato",
   "servings": 4,
   "ingredients": "potatoes, water, almond milk, vegan butter",
   "instructions": "cook potatoes in a pot, mix with other ingredients",
